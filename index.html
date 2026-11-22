@@ -5,131 +5,288 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gesture AI — Exhibition Demo</title>
 <style>
-:root{color-scheme:dark;--bg:#080b16;--card:#11182a;--line:#26334e;--text:#eef3ff;--muted:#9eacc7;--accent:#70f0d0;--blue:#7aa6ff}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#182342 0,#080b16 58%);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);min-height:100vh}
-.wrap{width:min(100%,1050px);margin:auto;padding:24px 16px 40px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.brand{font-weight:800;letter-spacing:.13em;font-size:13px;color:var(--accent)}.tag{border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:12px}
-h1{font-size:clamp(26px,5vw,42px);margin:0 0 8px;line-height:1.12}p{color:var(--muted);margin:0 0 18px}.layout{display:grid;grid-template-columns:1.35fr .8fr;gap:14px}
-.card{background:linear-gradient(145deg,#121a2d,#0e1424);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 18px 45px #0003}
-.videoBox{position:relative;background:#05070d;border-radius:15px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
-video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none}#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:scaleX(-1)}
-.placeholder{padding:20px;text-align:center;color:#8392ad}.placeholder .emoji{font-size:44px;display:block;margin-bottom:10px}
-.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}button{border:0;border-radius:12px;padding:12px 15px;font-weight:750;font-size:14px;cursor:pointer;color:#06121a;background:var(--accent)}button.secondary{color:var(--text);background:#26334e;border:1px solid #344666}button:disabled{opacity:.55;cursor:not-allowed}
+:root{color-scheme:dark;--bg:#070a14;--card:#10172a;--line:#26334e;--text:#eef3ff;--muted:#9eacc7;--accent:#70f0d0;--blue:#7aa6ff;--warm:#ffb86b}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 20% 0,#1a2650 0,transparent 55%),radial-gradient(ellipse at 100% 100%,#14304a 0,transparent 50%),var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+.wrap{width:min(100%,1100px);margin:auto;padding:22px 16px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.brand{font-weight:800;letter-spacing:.13em;font-size:13px;color:var(--accent)}
+.tag{border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px;display:flex;gap:7px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:#55627c}.on .dot{background:#3cf08c;box-shadow:0 0 10px #3cf08c}
+h1{font-size:clamp(28px,5vw,44px);margin:0 0 8px;line-height:1.1;background:linear-gradient(90deg,#fff,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+p.sub{color:var(--muted);margin:0 0 18px}
+.layout{display:grid;grid-template-columns:1.35fr .85fr;gap:14px}
+.card{background:linear-gradient(145deg,#131c33cc,#0d1323cc);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 18px 45px #0004}
+.videoBox{position:relative;background:#05070d;border-radius:16px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+video{width:100%;height:100%;object-fit:cover;display:none}
+#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;object-fit:cover}
+.mirror video,.mirror #overlay{transform:scaleX(-1)}
+.placeholder{padding:20px;text-align:center;color:#8392ad}.placeholder .emoji{font-size:46px;display:block;margin-bottom:10px}
+.hud{position:absolute;left:10px;top:10px;display:flex;gap:6px;pointer-events:none}
+.hud span{background:#000a;border:1px solid #fff2;border-radius:999px;padding:4px 9px;font-size:11px;color:#dfe8ff}
+.badge{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000b;border:1px solid var(--accent);border-radius:999px;padding:7px 15px;font-weight:800;font-size:15px;white-space:nowrap;display:none}
+.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+button{border:0;border-radius:12px;padding:12px 15px;font-weight:750;font-size:14px;cursor:pointer;color:#06121a;background:var(--accent);transition:transform .1s}
+button:active{transform:scale(.96)}
+button.secondary{color:var(--text);background:#26334e;border:1px solid #344666}
+button:disabled{opacity:.5;cursor:not-allowed}
 .status{margin-top:12px;font-size:13px;color:var(--muted);min-height:20px}
-.result{display:flex;flex-direction:column;min-height:100%;gap:12px}.resultHead{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.12em}.gesture{font-size:clamp(28px,5vw,44px);font-weight:850;line-height:1.1;min-height:56px}.emojiBig{font-size:56px}.confidence{height:8px;background:#26334e;border-radius:99px;overflow:hidden}.confidence>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--accent));transition:width .2s}
-.info{border:1px solid var(--line);border-radius:14px;padding:12px}.info b{display:block;margin-bottom:4px}.info small{color:var(--muted)}.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.tip{border:1px solid var(--line);border-radius:13px;padding:10px;text-align:center;font-size:12px;color:var(--muted)}.tip strong{display:block;color:var(--text);font-size:14px;margin:4px 0}
+.result{display:flex;flex-direction:column;gap:12px;transition:box-shadow .25s,border-color .25s}
+.result.live{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 38px #70f0d02e}
+.resultHead{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.12em;display:flex;justify-content:space-between}
+.emojiBig{font-size:64px;line-height:1.1}.pop{animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(.6);opacity:.4}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.gesture{font-size:clamp(26px,5vw,40px);font-weight:850;line-height:1.1}
+.confidence{height:8px;background:#26334e;border-radius:99px;overflow:hidden}
+.confidence>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--accent));transition:width .2s}
+.info{border:1px solid var(--line);border-radius:14px;padding:12px}.info b{display:block;margin-bottom:4px}.info small{color:var(--muted)}
+.hands{display:flex;flex-direction:column;gap:6px}
+.chip{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-left:4px solid var(--c,#555);border-radius:10px;padding:8px 10px;font-size:13px}
+.chip small{color:var(--muted)}
+.hist{display:flex;flex-wrap:wrap;gap:6px}.hist span{background:#1a2440;border:1px solid var(--line);border-radius:999px;padding:4px 9px;font-size:13px}
+.tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:14px}
+.tip{border:1px solid var(--line);border-radius:13px;padding:10px;text-align:center;font-size:12px;color:var(--muted);background:#0e1527aa}
+.tip strong{display:block;color:var(--text);font-size:14px;margin:4px 0}
+.tip.hit{border-color:var(--accent);background:#70f0d018}
+h3{margin:18px 0 0;font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
 footer{text-align:center;font-size:12px;color:#75839e;margin-top:18px}
-@media(max-width:720px){.layout{grid-template-columns:1fr}.wrap{padding:17px 12px 30px}.card{padding:13px}.tips{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.wrap{padding:16px 12px 30px}.card{padding:13px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="brand">✦ EXPO LAB / AI</div><div class="tag">LIVE HAND GESTURE</div></div>
+  <div class="top"><div class="brand">✦ EXPO LAB / AI</div><div class="tag" id="tag"><i class="dot"></i>LIVE HAND GESTURE</div></div>
   <h1>Gesture AI</h1>
-  <p>Show a hand to your camera and try a gesture. The demo recognizes common hand poses live.</p>
+  <p class="sub">Show one or two hands to the camera. It recognizes 19 single-hand poses, wave motion and 10+ two-hand combos, live.</p>
   <div class="layout">
     <section class="card">
-      <div class="videoBox">
+      <div class="videoBox mirror" id="box">
         <video id="video" autoplay playsinline muted></video>
         <canvas id="overlay"></canvas>
+        <div class="hud" id="hud" style="display:none"><span id="fps">0 FPS</span><span id="hc">0 hands</span></div>
+        <div class="badge" id="badge"></div>
         <div class="placeholder" id="placeholder"><span class="emoji">🖐️</span>Camera preview will appear here</div>
       </div>
       <div class="controls">
         <button id="start">Start camera & AI</button>
+        <button id="flip" class="secondary" disabled>🔄 Flip</button>
+        <button id="snap" class="secondary" disabled>📸 Snap</button>
         <button id="stop" class="secondary" disabled>Stop</button>
       </div>
       <div class="status" id="status">Ready. Press “Start camera & AI” and allow camera access.</div>
     </section>
-    <section class="card result">
-      <div class="resultHead">AI recognition</div>
+    <section class="card result" id="resultCard">
+      <div class="resultHead"><span>AI recognition</span><span id="fingers"></span></div>
       <div class="emojiBig" id="emoji">👀</div>
       <div class="gesture" id="label">Waiting…</div>
       <div class="confidence"><span id="bar"></span></div>
       <div class="info"><b id="meaning">Show your hand</b><small id="detail">Try a palm, thumbs-up, peace sign, or point.</small></div>
-      <div class="info"><b>How it works</b><small>On-device hand-gesture model tracks the camera frame and classifies the pose. Camera video is processed in your browser.</small></div>
+      <div class="hands" id="hands"></div>
+      <div><div class="resultHead" style="margin-bottom:6px">Recent</div><div class="hist" id="hist"><small style="color:var(--muted)">Nothing yet</small></div></div>
     </section>
   </div>
-  <div class="tips">
-    <div class="tip">🖐️<strong>Open Palm</strong>Hi / Stop</div>
-    <div class="tip">✌️<strong>Victory</strong>Peace</div>
-    <div class="tip">👍<strong>Thumbs Up</strong>Great!</div>
-    <div class="tip">☝️<strong>Pointing</strong>Point</div>
-    <div class="tip">✊<strong>Closed Fist</strong>Fist</div>
-    <div class="tip">🤟<strong>Love Sign</strong>I Love You</div>
-  </div>
-  <footer>For camera access, open this page from a secure HTTPS website. Internet is required to load the AI model.</footer>
+  <h3>One hand</h3>
+  <div class="tips" id="tips1"></div>
+  <h3>Two hands</h3>
+  <div class="tips" id="tips2"></div>
+  <footer>Camera needs a secure HTTPS page. Internet is required once to load the AI model. Video never leaves your device.</footer>
 </div>
 <script type="module">
-const video=document.getElementById('video'),canvas=document.getElementById('overlay'),ctx=canvas.getContext('2d');
-const startBtn=document.getElementById('start'),stopBtn=document.getElementById('stop'),statusEl=document.getElementById('status');
-const labelEl=document.getElementById('label'),emojiEl=document.getElementById('emoji'),meaningEl=document.getElementById('meaning'),detailEl=document.getElementById('detail'),bar=document.getElementById('bar'),placeholder=document.getElementById('placeholder');
-let stream=null,recognizer=null,running=false,lastVideoTime=-1,raf=null;
+const $=id=>document.getElementById(id);
+const video=$('video'),canvas=$('overlay'),ctx=canvas.getContext('2d'),box=$('box');
+const startBtn=$('start'),stopBtn=$('stop'),flipBtn=$('flip'),snapBtn=$('snap'),statusEl=$('status');
+let stream=null,recognizer=null,running=false,lastVideoTime=-1,raf=null,facing='user';
+const hist=[[],[]],wh=[[],[]],log=[];let lastKey='None',frames=0,lastFps=performance.now();
+const COLORS=['#70f0d0','#ffb86b'];
 const info={
- Open_Palm:['🖐️','OPEN PALM','Hello! / Stop','Open your hand with fingers extended.'],
- Victory:['✌️','VICTORY','Peace!','Two fingers raised in a V shape.'],
+ Open_Palm:['🖐️','OPEN PALM','Hello! / Stop','Fingers extended, palm facing the camera.'],
+ Victory:['✌️','VICTORY','Peace!','Index and middle finger in a V.'],
  Thumb_Up:['👍','THUMBS UP','Great job!','Thumb pointing upward.'],
- Pointing_Up:['☝️','POINTING','Look here!','Raise one finger to point.'],
- Closed_Fist:['✊','CLOSED FIST','Power!','Make a closed fist.'],
  Thumb_Down:['👎','THUMBS DOWN','Not quite!','Thumb pointing downward.'],
- ILoveYou:['🤟','LOVE SIGN','I Love You!','Thumb, index and pinky extended.'],
- None:['👀','NO GESTURE','Try another pose','Hold your hand clearly in camera view.']
+ Pointing_Up:['☝️','POINTING','Look here!','Raise one finger.'],
+ Closed_Fist:['✊','CLOSED FIST','Power!','Make a closed fist.'],
+ ILoveYou:['🤟','LOVE SIGN','I love you!','Thumb, index and pinky out.'],
+ OK:['👌','OK SIGN','All good!','Thumb and index form a circle, other fingers up.'],
+ Pinch:['🤏','PINCH','Tiny bit','Thumb and index fingertips touching.'],
+ Rock:['🤘','ROCK ON','Rock!','Index and pinky up, thumb tucked.'],
+ Call_Me:['🤙','CALL ME','Hang loose','Thumb and pinky extended.'],
+ Three:['3️⃣','THREE','Three fingers','Index, middle and ring finger up.'],
+ Four:['4️⃣','FOUR','Four fingers','Four fingers up, thumb tucked.'],
+ Namaste:['🙏','NAMASTE','Greetings / Thanks','Palms pressed together.'],
+ Both_Up:['🙌','HANDS UP','Hooray!','Both palms open.'],
+ Fist_Bump:['🤜🤛','FIST BUMP','Respect!','Both fists closed.'],
+ Double_Thumbs:['👍👍','DOUBLE THUMBS','Awesome!','Both thumbs up.'],
+ Double_Peace:['✌️✌️','DOUBLE PEACE','Peace x2','Victory sign with both hands.'],
+ Vulcan:['🖖','VULCAN','Live long & prosper','Fingers split between middle and ring.'],
+ Crossed:['🤞','FINGERS CROSSED','Good luck!','Index and middle pressed tightly together.'],
+ Finger_Gun:['🔫','FINGER GUN','Pew pew!','Thumb and index out, L-shape.'],
+ Point_Left:['👈','POINT LEFT','That way!','Index finger pointing left.'],
+ Point_Right:['👉','POINT RIGHT','That way!','Index finger pointing right.'],
+ Wave:['👋','WAVE','Hi there!','Open palm, wave side to side.'],
+ Clap:['👏','CLAP','Bravo!','Both palms together, fingers sideways.'],
+ Heart:['❤️','HEART','Love!','Index tips meet on top, thumbs meet below.'],
+ Shy_Point:['👉👈','SHY POINT','Umm… hi?','Both index fingers touching.'],
+ Frame:['📸','CAMERA FRAME','Say cheese!','Two finger-guns making a frame.'],
+ None:['👀','NO GESTURE','Try another pose','Hold your hand clearly in view.']
 };
-function setResult(key,score=0){
- const v=info[key]||info.None;emojiEl.textContent=v[0];labelEl.textContent=v[1];meaningEl.textContent=v[2];detailEl.textContent=v[3];bar.style.width=Math.round(score*100)+'%';
+const one=['Open_Palm','Victory','Thumb_Up','Thumb_Down','Pointing_Up','Closed_Fist','ILoveYou','OK','Pinch','Rock','Call_Me','Three','Four','Vulcan','Crossed','Finger_Gun','Point_Left','Point_Right','Wave'];
+const two=['Namaste','Clap','Both_Up','Heart','Shy_Point','Frame','Fist_Bump','Double_Thumbs','Double_Peace'];
+const infoFor=k=>{if(info[k])return info[k];if(k.startsWith('Double_')&&info[k.slice(7)]){const b=info[k.slice(7)];return [b[0]+b[0],'DOUBLE '+b[1],b[2]+' ×2','Same pose with both hands.'];}return info.None;};
+const tipHtml=k=>`<div class="tip" data-k="${k}">${info[k][0]}<strong>${info[k][1]}</strong>${info[k][2]}</div>`;
+$('tips1').innerHTML=one.map(tipHtml).join('');$('tips2').innerHTML=two.map(tipHtml).join('');
+const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function fingers(p){
+ const e=(t,q)=>dist(p[0],p[t])>dist(p[0],p[q])*1.08;
+ return [dist(p[4],p[17])>dist(p[3],p[17])*1.05,e(8,6),e(12,10),e(16,14),e(20,18)];
 }
+function extra(p,f,facing){
+ const dx=p[8].x-p[5].x,dy=p[8].y-p[5].y;
+ const palm=dist(p[0],p[9])||1,pinch=dist(p[4],p[8])/palm;
+ if(pinch<.32){if(f[2]&&f[3]&&f[4])return 'OK';if(!f[2]&&!f[3]&&!f[4])return 'Pinch';}
+ if(f[1]&&f[2]&&f[3]&&f[4]&&dist(p[12],p[16])>1.7*dist(p[8],p[12])&&dist(p[12],p[16])>1.7*dist(p[16],p[20]))return 'Vulcan';
+ if(f[1]&&f[2]&&!f[3]&&!f[4]&&dist(p[8],p[12])<palm*.18)return 'Crossed';
+ if(f[0]&&f[1]&&!f[2]&&!f[3]&&!f[4])return 'Finger_Gun';
+ if(f[1]&&!f[0]&&!f[2]&&!f[3]&&!f[4]&&Math.abs(dx)>1.2*Math.abs(dy)){const right=facing==='user'?dx<0:dx>0;return right?'Point_Right':'Point_Left';}
+ if(f[1]&&!f[2]&&!f[3]&&f[4]&&!f[0])return 'Rock';
+ if(f[0]&&!f[1]&&!f[2]&&!f[3]&&f[4])return 'Call_Me';
+ if(f[1]&&f[2]&&f[3]&&!f[4])return 'Three';
+ if(f[1]&&f[2]&&f[3]&&f[4]&&!f[0])return 'Four';
+ return null;
+}
+function waving(i,x){
+ const h=wh[i];h.push(x);if(h.length>26)h.shift();
+ let ch=0,last=0,min=1,max=0;
+ for(let k=1;k<h.length;k++){const d=h[k]-h[k-1];min=Math.min(min,h[k]);max=Math.max(max,h[k]);if(Math.abs(d)>.006){const sg=Math.sign(d);if(last&&sg!==last)ch++;last=sg;}}
+ return ch>=3&&max-min>.1;
+}
+function stable(i,name){
+ const h=hist[i];h.push(name);if(h.length>6)h.shift();
+ const c={};h.forEach(n=>c[n]=(c[n]||0)+1);
+ return Object.keys(c).sort((a,b)=>c[b]-c[a])[0];
+}
+function show(key,score,count){
+ const v=infoFor(key);
+ if(key!==lastKey){
+  emoji.textContent=v[0];emoji.classList.remove('pop');void emoji.offsetWidth;emoji.classList.add('pop');
+  label.textContent=v[1];meaning.textContent=v[2];detail.textContent=v[3];
+  document.querySelectorAll('.tip').forEach(t=>t.classList.toggle('hit',t.dataset.k===key));
+  if(key!=='None'){
+   log.unshift(v[0]+' '+v[1]);if(log.length>6)log.pop();
+   hist_.innerHTML=log.map(x=>`<span>${x}</span>`).join('');
+   try{navigator.vibrate&&navigator.vibrate(20)}catch(_){}
+  }
+  lastKey=key;
+ }
+ bar.style.width=Math.round(score*100)+'%';
+ resultCard.classList.toggle('live',key!=='None');
+ const b=$('badge');b.style.display=key==='None'?'none':'block';b.textContent=v[0]+' '+v[1];
+ fingersEl.textContent=count>0?'✋ '+count+' finger'+(count>1?'s':''):'';
+}
+const emoji=$('emoji'),label=$('label'),meaning=$('meaning'),detail=$('detail'),bar=$('bar'),hist_=$('hist'),resultCard=$('resultCard'),fingersEl=$('fingers'),placeholder=$('placeholder');
 function resize(){if(video.videoWidth){canvas.width=video.videoWidth;canvas.height=video.videoHeight;}}
 async function loadVision(){
  const v='0.10.14';
  const bases=['https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+v,'https://fastly.jsdelivr.net/npm/@mediapipe/tasks-vision@'+v,'https://gcore.jsdelivr.net/npm/@mediapipe/tasks-vision@'+v,'https://unpkg.com/@mediapipe/tasks-vision@'+v];
- for(const b of bases){
-  for(const f of ['/vision_bundle.mjs','/vision_bundle.js']){
-   try{const m=await import(b+f);if(m&&m.GestureRecognizer)return {vision:m,base:b};}catch(err){console.warn(b+f,err)}
-  }
+ for(const b of bases)for(const f of ['/vision_bundle.mjs','/vision_bundle.js']){
+  try{const m=await import(b+f);if(m&&m.GestureRecognizer)return {vision:m,base:b};}catch(err){console.warn(b+f,err)}
  }
  throw new Error('AI library did not load');
 }
+async function openCamera(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('Camera API unavailable (needs HTTPS or a real browser)');
+ if(stream)stream.getTracks().forEach(t=>t.stop());
+ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false});
+ video.srcObject=stream;video.muted=true;await video.play();resize();lastVideoTime=-1;
+ box.classList.toggle('mirror',facing==='user');
+ video.style.display='block';placeholder.style.display='none';
+}
 async function start(){
  startBtn.disabled=true;statusEl.textContent='Opening camera…';
- // 1) Camera first, so it works even if the AI model fails to load
  try{
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('Camera API unavailable (needs HTTPS or a browser, not a plain WebView)');
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
-  video.srcObject=stream;video.setAttribute('playsinline','');video.muted=true;await video.play();resize();
-  video.style.display='block';placeholder.style.display='none';canvas.style.display='block';
-  stopBtn.disabled=false;statusEl.textContent='Camera on. Loading AI model…';
+  await openCamera();
+  $('hud').style.display='flex';stopBtn.disabled=false;flipBtn.disabled=false;snapBtn.disabled=false;
+  statusEl.textContent='Camera on. Loading AI model…';
  }catch(e){startBtn.disabled=false;statusEl.textContent='Camera error: '+(e.name||'')+' '+(e.message||e)+' — allow camera permission and use HTTPS.';console.error(e);return;}
- // 2) AI model
  try{
-  const {vision,base}=await loadVision();
-  const {FilesetResolver,GestureRecognizer}=vision;
-  const files=await FilesetResolver.forVisionTasks(base+'/wasm');
-  const opts=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task',delegate:d},runningMode:'VIDEO',numHands:1});
-  try{recognizer=await GestureRecognizer.createFromOptions(files,opts('GPU'))}catch(err){recognizer=await GestureRecognizer.createFromOptions(files,opts('CPU'))}
-  running=true;statusEl.textContent='Camera active. Show a hand in view!';
-  loop();
- }catch(e){statusEl.textContent='Camera is on, but AI could not load: '+(e.message||e)+' — check internet / try another browser (Chrome).';console.error(e);}
+  if(!recognizer){
+   const {vision,base}=await loadVision();
+   const {FilesetResolver,GestureRecognizer}=vision;
+   const files=await FilesetResolver.forVisionTasks(base+'/wasm');
+   const opts=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task',delegate:d},runningMode:'VIDEO',numHands:2});
+   try{recognizer=await GestureRecognizer.createFromOptions(files,opts('GPU'))}catch(err){recognizer=await GestureRecognizer.createFromOptions(files,opts('CPU'))}
+  }
+  running=true;$('tag').classList.add('on');statusEl.textContent='AI active. Show one or two hands!';loop();
+ }catch(e){statusEl.textContent='Camera is on, but AI could not load: '+(e.message||e)+' — check internet / try Chrome.';console.error(e);}
+}
+function draw(points,color){
+ ctx.strokeStyle=color;ctx.lineWidth=3;ctx.lineCap='round';
+ for(const [a,b] of links){ctx.beginPath();ctx.moveTo(points[a].x*canvas.width,points[a].y*canvas.height);ctx.lineTo(points[b].x*canvas.width,points[b].y*canvas.height);ctx.stroke();}
+ ctx.fillStyle=color;for(const p of points){ctx.beginPath();ctx.arc(p.x*canvas.width,p.y*canvas.height,4.5,0,Math.PI*2);ctx.fill();}
 }
 function loop(){
  if(!running)return;
  if(video.readyState>=2&&video.currentTime!==lastVideoTime){
   lastVideoTime=video.currentTime;resize();
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  const result=recognizer.recognizeForVideo(video,performance.now());
-  if(result.landmarks?.length){
-   for(const points of result.landmarks){
-    ctx.fillStyle='#70f0d0';for(const p of points){ctx.beginPath();ctx.arc(p.x*canvas.width,p.y*canvas.height,4,0,Math.PI*2);ctx.fill();}
-    // draw landmark connection lines via simple known hand graph
-    const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
-    ctx.strokeStyle='#70f0d0';ctx.lineWidth=3;for(const [a,b] of links){ctx.beginPath();ctx.moveTo(points[a].x*canvas.width,points[a].y*canvas.height);ctx.lineTo(points[b].x*canvas.width,points[b].y*canvas.height);ctx.stroke();}
+  const r=recognizer.recognizeForVideo(video,performance.now());
+  const hands=(r.landmarks||[]).slice(0,2),names=[],scores=[],counts=[];
+  hands.forEach((p,i)=>{
+   draw(p,COLORS[i]);
+   const f=fingers(p),x=extra(p,f,facing),top=r.gestures?.[i]?.[0];
+   const raw=x||(top&&top.categoryName!=='None'?top.categoryName:'None');
+   let raw2=raw;
+   if(raw==='Open_Palm'||raw==='Wave'){raw2=waving(i,p[0].x)?'Wave':'Open_Palm';}else wh[i].length=0;
+   names.push(stable(i,raw2));scores.push(x?.9:(top?.score||0));counts.push(f.filter(Boolean).length);
+  });
+  for(let i=hands.length;i<2;i++)hist[i].length=0;
+  $('hc').textContent=hands.length+(hands.length===1?' hand':' hands');
+  $('hands').innerHTML=names.map((n,i)=>`<div class="chip" style="--c:${COLORS[i]}"><span>${info[n][0]} ${info[n][1]}</span><small>${counts[i]} finger${counts[i]===1?'':'s'} · ${Math.round(scores[i]*100)}%</small></div>`).join('');
+  let key='None',score=0,count=0;
+  if(hands.length===2){
+   const [a,b]=names,h0=hands[0],h1=hands[1],pl=dist(h0[0],h0[9])||1;
+   const pointing=['Pointing_Up','Point_Left','Point_Right'];
+   if(dist(h0[8],h1[8])<pl*.9&&dist(h0[4],h1[4])<pl*.9&&Math.abs(h0[8].y-h0[4].y)>.04&&(h0[8].y<h0[4].y)===(h1[8].y<h1[4].y)&&a!=='Closed_Fist')key='Heart';
+   else if(a==='Open_Palm'&&b==='Open_Palm'){
+    if(dist(h0[9],h1[9])<.2)key=(h0[12].y<h0[0].y-.05&&h1[12].y<h1[0].y-.05)?'Namaste':'Clap';
+    else key='Both_Up';
    }
-   const top=result.gestures?.[0]?.[0];if(top&&top.categoryName!=='None')setResult(top.categoryName,top.score);else setResult('None',top?.score||0);
-  }else setResult('None',0);
+   else if(pointing.includes(a)&&pointing.includes(b)&&dist(h0[8],h1[8])<pl*1.2)key='Shy_Point';
+   else if(a==='Finger_Gun'&&b==='Finger_Gun')key='Frame';
+   else if(a==='Closed_Fist'&&b==='Closed_Fist')key='Fist_Bump';
+   else if(a==='Thumb_Up'&&b==='Thumb_Up')key='Double_Thumbs';
+   else if(a==='Victory'&&b==='Victory')key='Double_Peace';
+   else if(a===b&&a!=='None')key='Double_'+a;
+   if(key!=='None'){score=Math.min(scores[0],scores[1]);count=counts[0]+counts[1];}
+  }
+  if(key==='None'&&hands.length){
+   const i=hands.length===2&&scores[1]>scores[0]?1:0;key=names[i];score=scores[i];count=counts.reduce((s,c)=>s+c,0);
+  }
+  show(key,score,count);
+  frames++;const now=performance.now();if(now-lastFps>1000){$('fps').textContent=Math.round(frames*1000/(now-lastFps))+' FPS';frames=0;lastFps=now;}
  }
  raf=requestAnimationFrame(loop);
 }
-function stop(){
- running=false;if(raf)cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;video.style.display='none';placeholder.style.display='block';ctx.clearRect(0,0,canvas.width,canvas.height);canvas.style.display='none';stopBtn.disabled=true;startBtn.disabled=false;statusEl.textContent='Camera stopped. Press start when you are ready.';setResult('None',0);
+async function flip(){
+ facing=facing==='user'?'environment':'user';
+ try{await openCamera();}catch(e){statusEl.textContent='Could not switch camera: '+(e.message||e);facing=facing==='user'?'environment':'user';}
 }
-startBtn.addEventListener('click',start);stopBtn.addEventListener('click',stop);
+function snap(){
+ if(!video.videoWidth)return;
+ const c=document.createElement('canvas');c.width=video.videoWidth;c.height=video.videoHeight;const g=c.getContext('2d');
+ g.save();if(facing==='user'){g.translate(c.width,0);g.scale(-1,1);}
+ g.drawImage(video,0,0);g.drawImage(canvas,0,0);g.restore();
+ g.font='bold '+Math.round(c.height/14)+'px system-ui';g.fillStyle='#70f0d0';g.fillText(infoFor(lastKey)[0]+' '+infoFor(lastKey)[1],20,c.height-24);
+ c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='gesture-'+Date.now()+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);},'image/png');
+}
+function stop(){
+ running=false;if(raf)cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());
+ stream=null;video.srcObject=null;video.style.display='none';placeholder.style.display='block';
+ ctx.clearRect(0,0,canvas.width,canvas.height);$('hud').style.display='none';$('badge').style.display='none';$('hands').innerHTML='';
+ stopBtn.disabled=flipBtn.disabled=snapBtn.disabled=true;startBtn.disabled=false;$('tag').classList.remove('on');
+ statusEl.textContent='Camera stopped. Press start when you are ready.';lastKey='';show('None',0,0);
+}
+startBtn.addEventListener('click',start);stopBtn.addEventListener('click',stop);flipBtn.addEventListener('click',flip);snapBtn.addEventListener('click',snap);
 window.addEventListener('resize',resize);
 </script>
 </body>
