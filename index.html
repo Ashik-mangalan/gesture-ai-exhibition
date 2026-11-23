@@ -57,7 +57,7 @@ footer{text-align:center;font-size:12px;color:#75839e;margin-top:18px}
 <div class="wrap">
   <div class="top"><div class="brand">✦ EXPO LAB / AI</div><div class="tag" id="tag"><i class="dot"></i>LIVE HAND GESTURE</div></div>
   <h1>Gesture AI</h1>
-  <p class="sub">Show one or two hands to the camera. It recognizes 19 single-hand poses, wave motion and 10+ two-hand combos, live.</p>
+  <p class="sub">Show one or two hands to the camera. It recognizes 40+ hand poses and combos, including trending Gen Z and K-pop gestures, live.</p>
   <div class="layout">
     <section class="card">
       <div class="videoBox mirror" id="box">
@@ -89,6 +89,8 @@ footer{text-align:center;font-size:12px;color:#75839e;margin-top:18px}
   <div class="tips" id="tips1"></div>
   <h3>Two hands</h3>
   <div class="tips" id="tips2"></div>
+  <h3>Gen Z &amp; trending</h3>
+  <div class="tips" id="tips3"></div>
   <footer>Camera needs a secure HTTPS page. Internet is required once to load the AI model. Video never leaves your device.</footer>
 </div>
 <script type="module">
@@ -96,10 +98,10 @@ const $=id=>document.getElementById(id);
 const video=$('video'),canvas=$('overlay'),ctx=canvas.getContext('2d'),box=$('box');
 const startBtn=$('start'),stopBtn=$('stop'),flipBtn=$('flip'),snapBtn=$('snap'),statusEl=$('status');
 let stream=null,recognizer=null,running=false,lastVideoTime=-1,raf=null,facing='user';
-const hist=[[],[]],wh=[[],[]],log=[];let lastKey='None',frames=0,lastFps=performance.now();
+const hist=[[],[],[],[]],wh=[[],[]],pd=[[],[]],sy=[],log=[];let lastKey='None',frames=0,lastFps=performance.now();
 const COLORS=['#70f0d0','#ffb86b'];
 const info={
- Open_Palm:['🖐️','OPEN PALM','Hello! / Stop','Fingers extended, palm facing the camera.'],
+ Open_Palm:['✋','OPEN PALM','Hello! / Stop','Fingers extended, palm facing the camera.'],
  Victory:['✌️','VICTORY','Peace!','Index and middle finger in a V.'],
  Thumb_Up:['👍','THUMBS UP','Great job!','Thumb pointing upward.'],
  Thumb_Down:['👎','THUMBS DOWN','Not quite!','Thumb pointing downward.'],
@@ -109,8 +111,8 @@ const info={
  OK:['👌','OK SIGN','All good!','Thumb and index form a circle, other fingers up.'],
  Pinch:['🤏','PINCH','Tiny bit','Thumb and index fingertips touching.'],
  Rock:['🤘','ROCK ON','Rock!','Index and pinky up, thumb tucked.'],
- Call_Me:['🤙','CALL ME','Hang loose','Thumb and pinky extended.'],
- Three:['3️⃣','THREE','Three fingers','Index, middle and ring finger up.'],
+ Call_Me:['🤙','CALL ME','Call me / Hang loose','Thumb and pinky extended (shaka).'],
+ Three:['3️⃣','W SIGN','W = Win!','Index, middle and ring up, the “W”.'],
  Four:['4️⃣','FOUR','Four fingers','Four fingers up, thumb tucked.'],
  Namaste:['🙏','NAMASTE','Greetings / Thanks','Palms pressed together.'],
  Both_Up:['🙌','HANDS UP','Hooray!','Both palms open.'],
@@ -119,21 +121,44 @@ const info={
  Double_Peace:['✌️✌️','DOUBLE PEACE','Peace x2','Victory sign with both hands.'],
  Vulcan:['🖖','VULCAN','Live long & prosper','Fingers split between middle and ring.'],
  Crossed:['🤞','FINGERS CROSSED','Good luck!','Index and middle pressed tightly together.'],
- Finger_Gun:['🔫','FINGER GUN','Pew pew!','Thumb and index out, L-shape.'],
+ Finger_Gun:['🔫','L SIGN','L / Pew pew!','Thumb and index out in an L-shape.'],
  Point_Left:['👈','POINT LEFT','That way!','Index finger pointing left.'],
  Point_Right:['👉','POINT RIGHT','That way!','Index finger pointing right.'],
  Wave:['👋','WAVE','Hi there!','Open palm, wave side to side.'],
  Clap:['👏','CLAP','Bravo!','Both palms together, fingers sideways.'],
- Heart:['❤️','HEART','Love!','Index tips meet on top, thumbs meet below.'],
+ Heart:['🫶','HEART HANDS','Sending love','Index tips meet on top, thumbs meet below.'],
  Shy_Point:['👉👈','SHY POINT','Umm… hi?','Both index fingers touching.'],
  Frame:['📸','CAMERA FRAME','Say cheese!','Two finger-guns making a frame.'],
+ Finger_Heart:['🫰','FINGER HEART','Saranghae!','Thumb and index crossed, K-pop style.'],
+ Point_You:['🫵','POINT AT YOU','Yes, you!','Point one finger straight at the camera.'],
+ Chef_Kiss:['🤌','CHEF’S KISS','Perfection!','All fingertips pinched against the thumb.'],
+ Salute:['🫡','SALUTE','Yes, boss!','Flat hand, fingers together, near your forehead.'],
+ Money:['🤑','MONEY','Pay me!','Rub your thumb against your fingers.'],
+ SixSeven:['6️⃣7️⃣','SIX SEVEN','The 6-7 meme','Both palms up, move them up and down in turns.'],
+ Raised_Hand:['✋','RAISED HAND','Stop / High five','Palm facing the camera, fingers together.'],
+ Splayed:['🖐️','SPREAD HAND','Five!','Palm facing the camera, fingers spread wide.'],
+ Back_Hand:['🤚','BACK OF HAND','Talk to the hand','Back of your hand facing the camera.'],
+ Palm_Up:['🫴','PALM UP','Here you go / Give me','Open palm facing up, fingers sideways.'],
+ Palm_Down:['🫳','PALM DOWN','Calm down / Drop it','Back of the hand up, fingers sideways.'],
+ Hand_Right:['🫱','HAND RIGHT','Handshake →','Hand held sideways, fingers pointing right.'],
+ Hand_Left:['🫲','HAND LEFT','← Handshake','Hand held sideways, fingers pointing left.'],
+ Push_Left:['🫷','PUSH LEFT','Hold it right there','Hand edge-on, fingers up, pushing sideways.'],
+ Push_Right:['🫸','PUSH RIGHT','Back off','Hand edge-on, fingers up, pushing sideways.'],
+ Point_Down:['👇','POINT DOWN','Down here!','Index finger pointing down.'],
+ Point_Up_Back:['👆','POINT UP (BACK)','Up there!','Index finger up, back of hand to camera.'],
+ Fist_Left:['🤛','FIST LEFT','Bump me','Fist held sideways, facing left.'],
+ Fist_Right:['🤜','FIST RIGHT','Bump me','Fist held sideways, facing right.'],
+ Punch:['👊','PUNCH','Pow!','Fist coming straight at the camera.'],
+ Middle:['🖕','MIDDLE FINGER','Rude!','Only the middle finger up.'],
+ Open_Hands:['👐','OPEN HANDS','Welcome / Hug?','Both palms open and cupped, pinkies together.'],
  None:['👀','NO GESTURE','Try another pose','Hold your hand clearly in view.']
 };
-const one=['Open_Palm','Victory','Thumb_Up','Thumb_Down','Pointing_Up','Closed_Fist','ILoveYou','OK','Pinch','Rock','Call_Me','Three','Four','Vulcan','Crossed','Finger_Gun','Point_Left','Point_Right','Wave'];
-const two=['Namaste','Clap','Both_Up','Heart','Shy_Point','Frame','Fist_Bump','Double_Thumbs','Double_Peace'];
+const one=['Raised_Hand','Splayed','Back_Hand','Palm_Up','Palm_Down','Hand_Right','Hand_Left','Push_Left','Push_Right','Point_Down','Point_Up_Back','Fist_Left','Fist_Right','Punch','Middle','Open_Palm','Victory','Thumb_Up','Thumb_Down','Pointing_Up','Closed_Fist','ILoveYou','OK','Pinch','Rock','Call_Me','Three','Four','Vulcan','Crossed','Finger_Gun','Point_Left','Point_Right','Wave'];
+const genz=['Finger_Heart','Point_You','Chef_Kiss','Salute','Money','Three','Finger_Gun','Call_Me','Rock','Crossed','Heart','SixSeven'];
+const two=['Namaste','Clap','Both_Up','Heart','Open_Hands','Shy_Point','Frame','Fist_Bump','Double_Thumbs','Double_Peace'];
 const infoFor=k=>{if(info[k])return info[k];if(k.startsWith('Double_')&&info[k.slice(7)]){const b=info[k.slice(7)];return [b[0]+b[0],'DOUBLE '+b[1],b[2]+' ×2','Same pose with both hands.'];}return info.None;};
 const tipHtml=k=>`<div class="tip" data-k="${k}">${info[k][0]}<strong>${info[k][1]}</strong>${info[k][2]}</div>`;
-$('tips1').innerHTML=one.map(tipHtml).join('');$('tips2').innerHTML=two.map(tipHtml).join('');
+$('tips1').innerHTML=one.map(tipHtml).join('');$('tips2').innerHTML=two.map(tipHtml).join('');$('tips3').innerHTML=genz.map(tipHtml).join('');
 const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function fingers(p){
@@ -143,10 +168,15 @@ function fingers(p){
 function extra(p,f,facing){
  const dx=p[8].x-p[5].x,dy=p[8].y-p[5].y;
  const palm=dist(p[0],p[9])||1,pinch=dist(p[4],p[8])/palm;
- if(pinch<.32){if(f[2]&&f[3]&&f[4])return 'OK';if(!f[2]&&!f[3]&&!f[4])return 'Pinch';}
+ if([8,12,16,20].every(t=>dist(p[4],p[t])<palm*.42))return 'Chef_Kiss';
+ if(pinch<.32){if(f[2]&&f[3]&&f[4])return 'OK';if(!f[2]&&!f[3]&&!f[4])return f[1]?'Finger_Heart':'Pinch';}
  if(f[1]&&f[2]&&f[3]&&f[4]&&dist(p[12],p[16])>1.7*dist(p[8],p[12])&&dist(p[12],p[16])>1.7*dist(p[16],p[20]))return 'Vulcan';
+ if(f[1]&&f[2]&&f[3]&&f[4]&&!f[0]&&dist(p[8],p[12])<palm*.35&&dist(p[12],p[16])<palm*.35&&dist(p[16],p[20])<palm*.35&&Math.abs(p[12].x-p[0].x)>Math.abs(p[12].y-p[0].y)*1.2&&p[0].y<.45)return 'Salute';
  if(f[1]&&f[2]&&!f[3]&&!f[4]&&dist(p[8],p[12])<palm*.18)return 'Crossed';
+ if(!f[2]&&!f[3]&&!f[4]&&(p[5].z-p[8].z)>.09&&dist(p[5],p[8])<palm*.9)return 'Point_You';
  if(f[0]&&f[1]&&!f[2]&&!f[3]&&!f[4])return 'Finger_Gun';
+ if(f[2]&&!f[1]&&!f[3]&&!f[4])return 'Middle';
+ if(f[1]&&!f[2]&&!f[3]&&!f[4]&&dy>0&&dy>1.2*Math.abs(dx))return 'Point_Down';
  if(f[1]&&!f[0]&&!f[2]&&!f[3]&&!f[4]&&Math.abs(dx)>1.2*Math.abs(dy)){const right=facing==='user'?dx<0:dx>0;return right?'Point_Right':'Point_Left';}
  if(f[1]&&!f[2]&&!f[3]&&f[4]&&!f[0])return 'Rock';
  if(f[0]&&!f[1]&&!f[2]&&!f[3]&&f[4])return 'Call_Me';
@@ -160,6 +190,36 @@ function waving(i,x){
  for(let k=1;k<h.length;k++){const d=h[k]-h[k-1];min=Math.min(min,h[k]);max=Math.max(max,h[k]);if(Math.abs(d)>.006){const sg=Math.sign(d);if(last&&sg!==last)ch++;last=sg;}}
  return ch>=3&&max-min>.1;
 }
+function orient(p,label){
+ const v1={x:p[5].x-p[0].x,y:p[5].y-p[0].y},v2={x:p[17].x-p[0].x,y:p[17].y-p[0].y};
+ const cz=v1.x*v2.y-v1.y*v2.x,sin=cz/((Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y))||1);
+ const realRight=label==='Left'; // model assumes a mirrored image; our frames are raw
+ return {sin,pf:realRight?cz<0:cz>0};
+}
+function refine(raw,p,o){
+ const wx=p[12].x-p[0].x,wy=p[12].y-p[0].y,palm=dist(p[0],p[9])||1,edge=Math.abs(o.sin)<.3;
+ const right=facing==='user'?wx<0:wx>0;
+ if(raw==='Open_Palm'){
+  if(Math.abs(wx)>1.2*Math.abs(wy))return edge?(right?'Hand_Right':'Hand_Left'):(o.pf?'Palm_Up':'Palm_Down');
+  if(edge){const thumbRight=facing==='user'?p[4].x<p[17].x:p[4].x>p[17].x;return thumbRight?'Push_Left':'Push_Right';}
+  if(!o.pf)return 'Back_Hand';
+  return dist(p[8],p[20])>palm*1.5?'Splayed':'Raised_Hand';
+ }
+ if(raw==='Pointing_Up')return o.pf?raw:'Point_Up_Back';
+ if(raw==='Closed_Fist'){
+  const fx=p[9].x-p[0].x,fy=p[9].y-p[0].y;
+  if(p[0].z-p[9].z>.07)return 'Punch';
+  if(Math.abs(fx)>1.2*Math.abs(fy))return (facing==='user'?fx<0:fx>0)?'Fist_Right':'Fist_Left';
+ }
+ return raw;
+}
+function swings(h,minD,amp,need){
+ let ch=0,last=0,mn=9,mx=-9;
+ for(let k=1;k<h.length;k++){const d=h[k]-h[k-1];mn=Math.min(mn,h[k]);mx=Math.max(mx,h[k]);if(Math.abs(d)>minD){const sg=Math.sign(d);if(last&&sg!==last)ch++;last=sg;}}
+ return ch>=need&&mx-mn>amp;
+}
+function moneyRub(i,p){const h=pd[i];h.push(dist(p[4],p[8])/(dist(p[0],p[9])||1));if(h.length>24)h.shift();return swings(h,.02,.12,3);}
+function sixSeven(d){sy.push(d);if(sy.length>30)sy.shift();return swings(sy,.008,.08,4);}
 function stable(i,name){
  const h=hist[i];h.push(name);if(h.length>6)h.shift();
  const c={};h.forEach(n=>c[n]=(c[n]||0)+1);
@@ -230,26 +290,29 @@ function loop(){
   lastVideoTime=video.currentTime;resize();
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const r=recognizer.recognizeForVideo(video,performance.now());
-  const hands=(r.landmarks||[]).slice(0,2),names=[],scores=[],counts=[];
+  const hands=(r.landmarks||[]).slice(0,2),names=[],shown=[],scores=[],counts=[];
   hands.forEach((p,i)=>{
    draw(p,COLORS[i]);
    const f=fingers(p),x=extra(p,f,facing),top=r.gestures?.[i]?.[0];
    const raw=x||(top&&top.categoryName!=='None'?top.categoryName:'None');
    let raw2=raw;
-   if(raw==='Open_Palm'||raw==='Wave'){raw2=waving(i,p[0].x)?'Wave':'Open_Palm';}else wh[i].length=0;
-   names.push(stable(i,raw2));scores.push(x?.9:(top?.score||0));counts.push(f.filter(Boolean).length);
+   if(['Pinch','Finger_Heart','Chef_Kiss','OK','None'].includes(raw)&&moneyRub(i,p))raw2='Money';else if(!['Pinch','Finger_Heart','Chef_Kiss','OK','None','Money'].includes(raw))pd[i].length=0;
+   if(raw2==='Money'){}else if(raw==='Open_Palm'||raw==='Wave'){raw2=waving(i,p[0].x)?'Wave':'Open_Palm';}else wh[i].length=0;
+   names.push(stable(i,raw2));shown.push(stable(i+2,refine(raw2,p,orient(p,r.handedness?.[i]?.[0]?.categoryName))));scores.push(x?.9:(top?.score||0));counts.push(f.filter(Boolean).length);
   });
-  for(let i=hands.length;i<2;i++)hist[i].length=0;
+  for(let i=hands.length;i<2;i++){hist[i].length=0;hist[i+2].length=0;wh[i].length=0;pd[i].length=0;}
+  if(hands.length<2)sy.length=0;
   $('hc').textContent=hands.length+(hands.length===1?' hand':' hands');
-  $('hands').innerHTML=names.map((n,i)=>`<div class="chip" style="--c:${COLORS[i]}"><span>${info[n][0]} ${info[n][1]}</span><small>${counts[i]} finger${counts[i]===1?'':'s'} · ${Math.round(scores[i]*100)}%</small></div>`).join('');
+  $('hands').innerHTML=shown.map((n,i)=>`<div class="chip" style="--c:${COLORS[i]}"><span>${infoFor(n)[0]} ${infoFor(n)[1]}</span><small>${counts[i]} finger${counts[i]===1?'':'s'} · ${Math.round(scores[i]*100)}%</small></div>`).join('');
   let key='None',score=0,count=0;
   if(hands.length===2){
    const [a,b]=names,h0=hands[0],h1=hands[1],pl=dist(h0[0],h0[9])||1;
    const pointing=['Pointing_Up','Point_Left','Point_Right'];
-   if(dist(h0[8],h1[8])<pl*.9&&dist(h0[4],h1[4])<pl*.9&&Math.abs(h0[8].y-h0[4].y)>.04&&(h0[8].y<h0[4].y)===(h1[8].y<h1[4].y)&&a!=='Closed_Fist')key='Heart';
+   if(sixSeven(h0[0].y-h1[0].y)&&a!=='Closed_Fist')key='SixSeven';
+   else if(dist(h0[8],h1[8])<pl*.9&&dist(h0[4],h1[4])<pl*.9&&Math.abs(h0[8].y-h0[4].y)>.04&&(h0[8].y<h0[4].y)===(h1[8].y<h1[4].y)&&a!=='Closed_Fist')key='Heart';
    else if(a==='Open_Palm'&&b==='Open_Palm'){
     if(dist(h0[9],h1[9])<.2)key=(h0[12].y<h0[0].y-.05&&h1[12].y<h1[0].y-.05)?'Namaste':'Clap';
-    else key='Both_Up';
+    else key=dist(h0[17],h1[17])<dist(h0[5],h1[5])*.8?'Open_Hands':'Both_Up';
    }
    else if(pointing.includes(a)&&pointing.includes(b)&&dist(h0[8],h1[8])<pl*1.2)key='Shy_Point';
    else if(a==='Finger_Gun'&&b==='Finger_Gun')key='Frame';
@@ -260,7 +323,7 @@ function loop(){
    if(key!=='None'){score=Math.min(scores[0],scores[1]);count=counts[0]+counts[1];}
   }
   if(key==='None'&&hands.length){
-   const i=hands.length===2&&scores[1]>scores[0]?1:0;key=names[i];score=scores[i];count=counts.reduce((s,c)=>s+c,0);
+   const i=hands.length===2&&scores[1]>scores[0]?1:0;key=shown[i];score=scores[i];count=counts.reduce((s,c)=>s+c,0);
   }
   show(key,score,count);
   frames++;const now=performance.now();if(now-lastFps>1000){$('fps').textContent=Math.round(frames*1000/(now-lastFps))+' FPS';frames=0;lastFps=now;}
